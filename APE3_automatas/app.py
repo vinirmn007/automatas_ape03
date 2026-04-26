@@ -19,9 +19,9 @@ METADATOS = {
     "afd1":  { "tipo": "afd",  "num": "AFD #1",  "titulo": "Flujo de Transacciones Bancarias",      "desc": "Valida que una transacción pase por: Autorización → Captura → Liquidación." },
     "afd2":  { "tipo": "afd",  "num": "AFD #2",  "titulo": "Cerradura Inteligente IoT",             "desc": "Bloquea el sistema tras 3 intentos fallidos consecutivos." },
     "afd3":  { "tipo": "afd",  "num": "AFD #3",  "titulo": "Orquestación de Pedidos Logísticos",    "desc": "Valida la secuencia de estados de un paquete logístico." },
-    "afnd1": { "tipo": "afnd", "num": "AFND #1", "titulo": "Sistema de Detección de Intrusos",      "desc": "Pendiente de implementación." },
-    "afnd2": { "tipo": "afnd", "num": "AFND #2", "titulo": "Análisis de Secuencias Bioinformáticas","desc": "Pendiente de implementación." },
-    "afnd3": { "tipo": "afnd", "num": "AFND #3", "titulo": "Sistema de Recomendación E-commerce",   "desc": "Pendiente de implementación." },
+    "afnd1": { "tipo": "afnd", "num": "AFND #1", "titulo": "validar_slack",      "desc": "Detecta si un mensaje está dirigido al bot y contiene un comando." },
+    "afnd2": { "tipo": "afnd", "num": "AFND #2", "titulo": "analizar_proteina",  "desc": "Busca el patrón KGF en una secuencia de aminoácidos." },
+    "afnd3": { "tipo": "afnd", "num": "AFND #3", "titulo": "analizar_comportamiento",   "desc": "Modela el comportamiento ambiguo de navegación de Home a Checkout." },
 }
 
 

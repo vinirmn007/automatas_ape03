@@ -1,120 +1,77 @@
 """
-AFND - Detección de Patrones de Ataque en Ciberseguridad (IDS)
-Patrón: SYN ACK+ RST
-Alfabeto: {SYN, ACK, RST}
-Estados: {q0, q1, q2, q3}
-Estado inicial: q0
-Estado(s) de aceptación: {q3}
-
-NOTA PARA EL DESARROLLADOR:
-- Este es un AFND (Autómata Finito No Determinista)
-- La función de transición retorna CONJUNTOS de estados: δ: Q × Σ → P(Q)
-- Implementar el algoritmo de simulación por subconjuntos o seguimiento de todos
-  los estados activos simultáneos
-- TODO: Completar la tabla de transiciones según el problema
+AFND - Sistema de Detección de Comandos (IDS)
+Patrón: @bot [user] comando
+Basado en: image_a91d95.png
 """
 
 ESTADOS = ["q0", "q1", "q2", "q3"]
-ALFABETO = ["SYN", "ACK", "RST"]
+ALFABETO = ["B", "W", "C", "ε"] # B=@bot, W=Word/User, C=Command
 ESTADO_INICIAL = "q0"
 ESTADOS_ACEPTACION = {"q3"}
 
 NOMBRES_ESTADOS = {
-    "q0": "INICIO",
-    "q1": "SYN_RECIBIDO",
-    "q2": "ACK_RECIBIDO",
-    "q3": "ATAQUE_DETECTADO",
+    "q0": "ESPERA_MENCION",
+    "q1": "MENCION_DETECTADA",
+    "q2": "ESPERA_COMANDO",
+    "q3": "COMANDO_VALIDO"
 }
 
-# TODO: Completar/verificar la tabla de transiciones para el AFND
-# Los valores son CONJUNTOS de estados (lista vacía = transición muerta)
 TABLA_TRANSICIONES = {
-    "q0": {"SYN": ["q1"], "ACK": [],        "RST": []},
-    "q1": {"SYN": [],     "ACK": ["q2"],     "RST": []},
-    "q2": {"SYN": [],     "ACK": ["q2"],     "RST": ["q3"]},
-    "q3": {"SYN": [],     "ACK": [],         "RST": []},
+    "q0": {"B": ["q1"], "W": [], "C": [], "ε": []},
+    "q1": {"B": [], "W": ["q2"], "C": [], "ε": ["q2"]},
+    "q2": {"B": [], "W": [], "C": ["q3"], "ε": []},
+    "q3": {"B": [], "W": [], "C": [], "ε": []}
 }
 
 DESCRIPCION_SIMBOLOS = {
-    "SYN": "Intento de conexión",
-    "ACK": "Respuesta del servidor",
-    "RST": "Paquete de reset",
+    "B": "@bot (Mención)",
+    "W": "Usuario/Palabra",
+    "C": "Comando (!cmd o ?help)",
+    "ε": "Transición Lambda (Opcional)"
 }
 
+def clausura_epsilon(estados):
+    clausura = set(estados)
+    pila = list(estados)
+    while pila:
+        estado = pila.pop()
+        for dest in TABLA_TRANSICIONES[estado].get("ε", []):
+            if dest not in clausura:
+                clausura.add(dest)
+                pila.append(dest)
+    return clausura
 
-def epsilon_cierre(estados: set) -> set:
-    """Calcula el ε-cierre de un conjunto de estados (no hay transiciones ε aquí)."""
-    return set(estados)
+def procesar_cadena(cadena_tokens: list) -> dict:
+    # Asumimos que los tokens ya vienen clasificados como B, W o C
+    estados_activos = clausura_epsilon({ESTADO_INICIAL})
+    historial = [{"paso": 0, "simbolo": None, "estado_actual": sorted(list(estados_activos))}]
 
-
-def mover(estados: set, simbolo: str) -> set:
-    """Retorna todos los estados alcanzables desde 'estados' con 'simbolo'."""
-    siguiente = set()
-    for estado in estados:
-        destinos = TABLA_TRANSICIONES.get(estado, {}).get(simbolo, [])
-        siguiente.update(destinos)
-    return siguiente
-
-
-def procesar_cadena(tokens: list) -> dict:
-    """
-    Procesa una lista de tokens (símbolos del alfabeto).
-    Simula el AFND con seguimiento de todos los estados activos.
-    """
-    estados_actuales = epsilon_cierre({ESTADO_INICIAL})
-    historial = [
-        {
-            "paso": 0,
-            "simbolo": None,
-            "estados_anteriores": None,
-            "estados_actuales": list(estados_actuales),
-            "nombres_estados": [NOMBRES_ESTADOS[e] for e in estados_actuales],
-        }
-    ]
-
-    for i, simbolo in enumerate(tokens, start=1):
-        if simbolo not in ALFABETO:
-            return {
-                "aceptada": False,
-                "estados_finales": list(estados_actuales),
-                "historial": historial,
-                "error": f"Símbolo '{simbolo}' no pertenece al alfabeto {ALFABETO}",
-            }
-
-        estados_anteriores = estados_actuales
-        estados_actuales = epsilon_cierre(mover(estados_actuales, simbolo))
-
-        historial.append(
-            {
-                "paso": i,
-                "simbolo": simbolo,
-                "descripcion": DESCRIPCION_SIMBOLOS[simbolo],
-                "estados_anteriores": list(estados_anteriores),
-                "nombres_estados_anteriores": [NOMBRES_ESTADOS[e] for e in estados_anteriores],
-                "estados_actuales": list(estados_actuales),
-                "nombres_estados": [NOMBRES_ESTADOS[e] for e in estados_actuales],
-                "muerto": len(estados_actuales) == 0,
-            }
-        )
-
-        if not estados_actuales:
-            return {
-                "aceptada": False,
-                "estados_finales": [],
-                "historial": historial,
-                "error": None,
-            }
-
-    aceptada = bool(estados_actuales & ESTADOS_ACEPTACION)
+    for i, simbolo in enumerate(cadena_tokens, start=1):
+        nuevos_estados = set()
+        for estado in estados_activos:
+            transiciones = TABLA_TRANSICIONES[estado].get(simbolo, [])
+            for dest in transiciones:
+                nuevos_estados.add(dest)
+        
+        estados_anteriores = estados_activos
+        estados_activos = clausura_epsilon(nuevos_estados)
+        
+        historial.append({
+            "paso": i,
+            "simbolo": simbolo,
+            "estado_anterior": sorted(list(estados_anteriores)),
+            "estado_actual": sorted(list(estados_activos))
+        })
+            
+    aceptada = any(e in ESTADOS_ACEPTACION for e in estados_activos)
+    
     return {
         "aceptada": aceptada,
-        "estados_finales": list(estados_actuales),
-        "nombres_estados_finales": [NOMBRES_ESTADOS[e] for e in estados_actuales],
-        "historial": historial,
-        "error": None,
+        "estado_final": sorted(list(estados_activos)),
+        "historial": historial
     }
 
-
+# ESTA ES LA FUNCIÓN QUE TE DABA EL ERROR
 def obtener_definicion_formal() -> dict:
     return {
         "estados": ESTADOS,
@@ -124,7 +81,6 @@ def obtener_definicion_formal() -> dict:
         "estado_inicial": ESTADO_INICIAL,
         "estados_aceptacion": list(ESTADOS_ACEPTACION),
         "tabla_transiciones": TABLA_TRANSICIONES,
-        "patron": "SYN ACK+ RST",
-        "descripcion": "Detecta el patrón de ataque: SYN seguido de uno o más ACK y un RST final",
-        "tipo": "AFND",
+        "patron": "@bot (USER)? (!cmd | ?help)",
+        "descripcion": "AFND-λ que detecta comandos para un bot con usuario opcional."
     }

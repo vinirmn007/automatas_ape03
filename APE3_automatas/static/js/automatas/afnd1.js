@@ -1,5 +1,9 @@
 window.AUTOMATA_CONFIG = {
-  ejemplos: [],
+  ejemplos: [
+    ["BWC", true],
+    ["BWWWC", true],
+    ["WC", false]
+  ],
   renderDiagram: function () {
     return '<svg viewBox="0 0 520 180" xmlns="http://www.w3.org/2000/svg">' +
       '<rect x="8" y="8" width="504" height="164" rx="12" fill="#131720" stroke="#1e2535"/>' +

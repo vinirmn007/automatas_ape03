@@ -131,32 +131,48 @@
       ? "Cadena ACEPTADA"
       : "Cadena RECHAZADA" + (data.error ? " - " + data.error : "");
 
+    function formatState(st, names) {
+      if (Array.isArray(st)) {
+        if (st.length === 0) return ["∅", ""];
+        const s = "{" + st.join(", ") + "}";
+        const n = "{" + (Array.isArray(names) ? names.join(", ") : names) + "}";
+        return [s, n];
+      }
+      return [st, names];
+    }
+
     const stepsHtml = (data.historial || []).map(function (p, i) {
       const isLast = i === data.historial.length - 1;
+      
+      const stAct = formatState(p.estado_actual, p.nombre_estado);
 
       if (p.paso === 0) {
         return '<div class="step">' +
           '<div class="snum">0</div>' +
-          '<span class="sstate">Estado inicial: <strong>' + p.estado_actual + '</strong>' +
-          '<span class="sdesc"> - ' + p.nombre_estado + "</span></span>" +
+          '<span class="sstate">Estado inicial: <strong>' + stAct[0] + '</strong>' +
+          '<span class="sdesc"> - ' + stAct[1] + "</span></span>" +
           "</div>";
       }
+
+      const stAnt = formatState(p.estado_anterior, p.nombre_estado_anterior);
 
       return '<div class="step ' + (isLast ? (data.aceptada ? "final" : "error") : "") + '">' +
         '<div class="snum ' + (isLast && data.aceptada ? "ok" : "") + '">' + p.paso + "</div>" +
         '<span class="ssym">' + p.simbolo + "</span>" +
         '<span class="sdesc">(' + p.descripcion + ")</span>" +
         '<span class="sarrow">-></span>' +
-        '<span class="sstate"><strong>' + p.estado_anterior + "</strong> -> <strong>" + p.estado_actual + "</strong>" +
-        '<span class="sdesc"> ' + p.nombre_estado + "</span>" +
+        '<span class="sstate"><strong>' + stAnt[0] + "</strong> -> <strong>" + stAct[0] + "</strong>" +
+        '<span class="sdesc"> ' + stAct[1] + "</span>" +
         "</span>" +
-        (p.transicion_invalida ? '<span style="color:var(--danger);font-size:.72rem">invalida</span>' : "") +
+        (p.transicion_invalida ? '<span style="color:var(--danger);font-size:.72rem;margin-left:8px;">(sin transiciones)</span>' : "") +
         "</div>";
     }).join("");
 
+    const fin = formatState(data.estado_final, data.nombre_estado_final);
+
     box.innerHTML =
       '<div class="verdict ' + (data.aceptada ? "ok" : "fail") + '">' + verdict + "</div>" +
-      '<div class="result-meta">Estado final: ' + data.estado_final + " - " + data.nombre_estado_final + "</div>" +
+      '<div class="result-meta">Estado final: ' + fin[0] + (fin[1] ? " - " + fin[1] : "") + "</div>" +
       '<div class="steps">' + stepsHtml + "</div>";
   }
 

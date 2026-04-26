@@ -80,19 +80,23 @@
           <tbody>
             {% for estado in definicion.estados %}
             {% set is_accept = estado in definicion.estados_aceptacion %}
-            {% set is_trap   = definicion.tabla_transiciones[estado].values() | list | reject('none') | list | length == 0
-                               or (definicion.tabla_transiciones[estado].values() | list | unique | list == [estado]) %}
             <tr class="{% if is_accept %}row-accept{% endif %}">
               <td>
                 <strong>{% if is_accept %}★ {% endif %}{{ estado }}</strong>
                 <span class="cell-sub">{{ definicion.nombres_estados[estado] }}</span>
               </td>
               {% for s in definicion.alfabeto %}
-                {% set next = definicion.tabla_transiciones[estado][s] %}
-                {% if next == '-' or next is none %}
+                {% set next = definicion.tabla_transiciones[estado].get(s, none) %}
+                {% if next is none or next == '-' or next|length == 0 %}
                   <td class="cell-dash">—</td>
-                {% else %}
+                {% elif next is string %}
                   <td>{{ next }}<span class="cell-sub">{{ definicion.nombres_estados[next] }}</span></td>
+                {% else %}
+                  <td>
+                    {% for n in next %}
+                      {{ n }}<span class="cell-sub">{{ definicion.nombres_estados[n] }}</span>{% if not loop.last %}<br>{% endif %}
+                    {% endfor %}
+                  </td>
                 {% endif %}
               {% endfor %}
             </tr>

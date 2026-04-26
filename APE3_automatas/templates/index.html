@@ -119,11 +119,11 @@
   <!-- AFND cards -->
   <div id="afndCards" class="grid" style="display:none">
     {% for id, m in metadatos.items() if m.tipo == 'afnd' %}
-    <a class="ex-card afnd-card coming-soon" href="#">
+    <a class="ex-card afnd-card" href="/automata/{{ id }}">
       <div class="ex-num">{{ m.num }}</div>
       <h3>{{ m.titulo }}</h3>
       <p>{{ m.desc }}</p>
-      <span style="position:absolute;top:1.2rem;right:1.2rem;font-family:'Space Mono',monospace;font-size:.7rem;color:var(--afnd-accent);opacity:.6">PRÓX.</span>
+      <span class="arrow-hint">→</span>
     </a>
     {% endfor %}
   </div>
