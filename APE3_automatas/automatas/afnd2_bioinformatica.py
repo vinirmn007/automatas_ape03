@@ -1,8 +1,3 @@
-"""
-AFND - Análisis de Secuencias Bioinformáticas
-Coincidente con: image_a91e0c.png
-"""
-
 ESTADOS = ["q0", "q1", "q2", "q3"]
 ALFABETO = ["K", "G", "X", "F"]
 ESTADO_INICIAL = "q0"
@@ -30,7 +25,7 @@ DESCRIPCION_SIMBOLOS = {
 }
 
 def clausura_epsilon(estados):
-    return set(estados) # No hay lambdas en este modelo
+    return set(estados)
 
 def procesar_cadena(cadena: str) -> dict:
     cadena = cadena.upper().strip()
@@ -38,7 +33,6 @@ def procesar_cadena(cadena: str) -> dict:
     historial = [{"paso": 0, "simbolo": None, "estado_actual": sorted(list(estados_activos))}]
 
     for i, simbolo in enumerate(cadena, start=1):
-        # Mapeo a X si no es un aminoácido del patrón principal
         simbolo_efectivo = simbolo if simbolo in ["K", "G", "F"] else "X"
         
         nuevos_estados = set()

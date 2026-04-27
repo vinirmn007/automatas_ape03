@@ -1,11 +1,5 @@
-"""
-AFND - Sistema de Detección de Comandos (IDS)
-Patrón: @bot [user] comando
-Basado en: image_a91d95.png
-"""
-
 ESTADOS = ["q0", "q1", "q2", "q3"]
-ALFABETO = ["B", "W", "C", "ε"] # B=@bot, W=Word/User, C=Command
+ALFABETO = ["bot", "user", "cmd", "help", "epsilon"]
 ESTADO_INICIAL = "q0"
 ESTADOS_ACEPTACION = {"q3"}
 
@@ -17,32 +11,36 @@ NOMBRES_ESTADOS = {
 }
 
 TABLA_TRANSICIONES = {
-    "q0": {"B": ["q1"], "W": [], "C": [], "ε": []},
-    "q1": {"B": [], "W": ["q2"], "C": [], "ε": ["q2"]},
-    "q2": {"B": [], "W": [], "C": ["q3"], "ε": []},
-    "q3": {"B": [], "W": [], "C": [], "ε": []}
+    "q0": {"bot": ["q1"], "user": [], "cmd": [], "help": [], "epsilon": []},
+    "q1": {"bot": [], "user": ["q2"], "cmd": [], "help": [], "epsilon": ["q2"]},
+    "q2": {"bot": [], "user": [], "cmd": ["q3"], "help": ["q3"], "epsilon": []},
+    "q3": {"bot": [], "user": [], "cmd": [], "help": [], "epsilon": []}
 }
 
 DESCRIPCION_SIMBOLOS = {
-    "B": "@bot (Mención)",
-    "W": "Usuario/Palabra",
-    "C": "Comando (!cmd o ?help)",
-    "ε": "Transición Lambda (Opcional)"
+    "bot": "@bot (Mención)",
+    "user": "Usuario/Palabra",
+    "cmd": "Comando (!cmd)",
+    "help": "Comando (?help)",
+    "epsilon": "Transición Lambda (Opcional)"
 }
 
 def clausura_epsilon(estados):
     clausura = set(estados)
     pila = list(estados)
+    print(pila)
     while pila:
         estado = pila.pop()
-        for dest in TABLA_TRANSICIONES[estado].get("ε", []):
+        for dest in TABLA_TRANSICIONES[estado].get("epsilon", []):
             if dest not in clausura:
                 clausura.add(dest)
                 pila.append(dest)
     return clausura
 
-def procesar_cadena(cadena_tokens: list) -> dict:
-    # Asumimos que los tokens ya vienen clasificados como B, W o C
+def procesar_cadena(cadena_tokens) -> dict:
+    if isinstance(cadena_tokens, str):
+        cadena_tokens = cadena_tokens.split()
+        
     estados_activos = clausura_epsilon({ESTADO_INICIAL})
     historial = [{"paso": 0, "simbolo": None, "estado_actual": sorted(list(estados_activos))}]
 
@@ -71,7 +69,6 @@ def procesar_cadena(cadena_tokens: list) -> dict:
         "historial": historial
     }
 
-# ESTA ES LA FUNCIÓN QUE TE DABA EL ERROR
 def obtener_definicion_formal() -> dict:
     return {
         "estados": ESTADOS,

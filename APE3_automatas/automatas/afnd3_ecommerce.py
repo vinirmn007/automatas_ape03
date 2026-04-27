@@ -1,8 +1,3 @@
-"""
-AFND - Sistema de Recomendación E-commerce
-Coincidente con: image_a91dcd.png
-"""
-
 ESTADOS = ["q0", "q1", "q2", "q3"]
 ALFABETO = ["H", "S", "C"]
 ESTADO_INICIAL = "q0"
@@ -52,8 +47,11 @@ def procesar_cadena(cadena: str) -> dict:
             "estado_anterior": sorted(list(estados_anteriores)),
             "estado_actual": sorted(list(estados_activos))
         })
+
             
     aceptada = any(e in ESTADOS_ACEPTACION for e in estados_activos)
+    for estado in historial:
+        print(estado)
     return {
         "aceptada": aceptada,
         "estado_final": sorted(list(estados_activos)),
