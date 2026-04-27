@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.titulo }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/detalle.css') }}"/>
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <a class="back-btn" href="/">← Volver</a>
+  <span class="badge {{ meta.tipo }}">{{ meta.num }}</span>
+  <h1>{{ meta.titulo }}</h1>
+</div>
+
+<div class="container">
+
+  <!-- Definición formal -->
+  <div class="card">
+    <div class="card-title">Definición Formal</div>
+    <div class="def-grid">
+      <div class="def-item">
+        <div class="def-label">Estados Q</div>
+        <div class="def-value">
+          {% for e in definicion.estados %}
+            <span class="tag-pill {% if e in definicion.estados_aceptacion %}accept{% endif %}">{{ e }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="def-item">
+        <div class="def-label">Alfabeto Σ</div>
+        <div class="def-value">
+          {% for s in definicion.alfabeto %}
+            <span class="tag-pill">{{ s }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="def-item">
+        <div class="def-label">Estado Inicial q₀</div>
+        <div class="def-value"><span class="tag-pill">{{ definicion.estado_inicial }}</span></div>
+      </div>
+      <div class="def-item">
+        <div class="def-label">Estados de Aceptación F</div>
+        <div class="def-value">
+          {% for e in definicion.estados_aceptacion %}
+            <span class="tag-pill accept">{{ e }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="def-item">
+        <div class="def-label">Patrón</div>
+        <div class="def-value pattern">{{ definicion.patron }}</div>
+      </div>
+      <div class="def-item">
+        <div class="def-label">Descripción</div>
+        <div class="def-value" style="font-size:.8rem;color:var(--muted)">{{ definicion.descripcion }}</div>
+      </div>
+    </div>
+    <div style="margin-top:1rem;font-size:.75rem;color:var(--muted);font-family:'Space Mono',monospace">
+      Símbolos:
+      {% for s, desc in definicion.descripcion_simbolos.items() %}
+        <strong>{{ s }}</strong> = {{ desc }}{% if not loop.last %} · {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Tabla + Diagrama -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Tabla de Transiciones δ</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Estado δ</th>
+              {% for s in definicion.alfabeto %}
+                <th>{{ s }}<br><span style="font-size:.65rem;color:var(--muted)">{{ definicion.descripcion_simbolos[s] }}</span></th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for estado in definicion.estados %}
+            {% set is_accept = estado in definicion.estados_aceptacion %}
+            <tr class="{% if is_accept %}row-accept{% endif %}">
+              <td>
+                <strong>{% if is_accept %}★ {% endif %}{{ estado }}</strong>
+                <span class="cell-sub">{{ definicion.nombres_estados[estado] }}</span>
+              </td>
+              {% for s in definicion.alfabeto %}
+                {% set next = definicion.tabla_transiciones[estado].get(s, none) %}
+                {% if next is none or next == '-' or next|length == 0 %}
+                  <td class="cell-dash">—</td>
+                {% elif next is string %}
+                  <td>{{ next }}<span class="cell-sub">{{ definicion.nombres_estados[next] }}</span></td>
+                {% else %}
+                  <td>
+                    {% for n in next %}
+                      {{ n }}<span class="cell-sub">{{ definicion.nombres_estados[n] }}</span>{% if not loop.last %}<br>{% endif %}
+                    {% endfor %}
+                  </td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:.8rem;font-size:.72rem;color:var(--muted);font-family:'Space Mono',monospace">
+        ★ Estado de aceptación &nbsp;·&nbsp; — Transición inválida
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Diagrama de Transición</div>
+      <div class="diagram-area" id="diagramArea">
+        <!-- El SVG se inyecta por JS según el auto_id -->
+        <div style="color:var(--muted);text-align:center">
+          <div style="font-size:2rem;margin-bottom:.5rem">🖼️</div>
+          <div>Cargando diagrama…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simulador -->
+  <div class="card">
+    <div class="card-title">Simulador</div>
+    <div class="sim-row">
+      <input type="text" id="simInput"
+             placeholder="Ingresa la cadena (ej: {{ definicion.alfabeto | join('') }})"
+             maxlength="40"
+             oninput="this.value=this.value.toUpperCase()"
+             onkeydown="if(event.key==='Enter')runSim()"/>
+      <button class="run-btn" onclick="runSim()">▶ Ejecutar</button>
+    </div>
+    <div class="sim-hint">Alfabeto: { {{ definicion.alfabeto | join(', ') }} }</div>
+    <div class="quick-examples">
+      <span class="ql">Ejemplos:</span>
+      <!-- Se generan desde JS con los ejemplos de cada autómata -->
+      <span id="examplesContainer"></span>
+    </div>
+    <div id="simResult" class="result-box"></div>
+  </div>
+
+</div>
+
+<script>
+window.AUTO_ID = "{{ auto_id }}";
+window.DEFINICION = JSON.parse('{{ definicion | tojson | safe }}');
+</script>
+<script src="{{ url_for('static', filename='js/automatas/' ~ auto_id ~ '.js') }}"></script>
+<script src="{{ url_for('static', filename='js/detalle_comun.js') }}"></script>
+{% endblock %}
